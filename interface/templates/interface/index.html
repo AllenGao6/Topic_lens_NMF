@@ -1,0 +1,231 @@
+{% load static %}
+{% block body %}
+<html>
+	<head>
+		<title>Topic Lens Demo</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.css" rel="stylesheet" class="ui" />
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.8/d3.min.js"></script>
+		<script src="http://axc.net/code_libraries/lasso/lasso.min.js"></script>
+		
+
+		<script type="text/javascript" src="{% static 'interface/js/app4.js' %}"></script>
+		<link rel="stylesheet" href="{% static 'treant/Treant.css' %}">
+		<link rel="stylesheet" href="{% static 'interface/css/super_simple1.css' %}">
+		<script src="{% static 'interface/js/super_simple.js' %}"></script>
+		<script src="{% static 'treant/vendor/raphael.js' %}"></script>
+		<script src="{% static 'treant/Treant.js' %}"></script>
+		
+	</head>
+
+
+	
+
+
+<style>
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+
+.lasso path {
+  stroke: rgb(80,80,80);
+  stroke-width:2px;
+}
+
+.lasso .drawn {
+  fill-opacity:.05 ;
+}
+
+.lasso .loop_close {
+  fill:none;
+  stroke-dasharray: 4,4;
+}
+
+.lasso .origin {
+  fill:#3399FF;
+  fill-opacity:.5;
+}
+
+.not_possible {
+  fill:rgb(200,200,200);
+}
+
+.possible {
+  fill:#EC888C;
+}
+</style>
+
+<body>
+	<div class="chart" id="OrganiseChart-simple">
+	</div>
+
+	<script>
+		new Treant( simple_chart_config );
+	</script>
+
+<div class="ui warning message" style="
+	position: absolute;
+    left: 10px;
+    width: 400px;
+    top: calc(50% + 10px);
+    z-index: 100;
+    display:none;">
+	<div class="header" id="seconds-counter">
+		Updating...#vis
+	</div>
+</div>
+
+
+<div class="ui segment" id="loading" style="
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    margin: 0;
+">
+	<div class="ui active dimmer">
+	<div class="ui large text loader">Loading</div>
+	</div>
+	<p></p>
+	<p></p>
+	<p></p>
+</div>
+
+<div style="margin: auto; width: 1600px; margin-top: 2em; display: none;">
+	<div class="ui mini compact stackable menu">
+		<a class="ui item" id="show-all" >
+			<span data-inverted="" data-tooltip="Show all documents" data-position="bottom center">Show All</span>
+		</a>
+		<a class="ui item" id="hide-all">
+			<span data-inverted="" data-tooltip="Hide all documents" data-position="bottom center">Hide All</span>
+		</a>
+	</div>
+</div>
+
+
+<div class="ui grid" style="margin: auto; width: 1600px;">
+	<div class="three wide column">
+		<div class="ui segment" id="topics-filters">
+			{% include 'interface/topics-filters.html' %}
+		</div>
+	</div>
+	<div class="thirteen wide column">
+		<div id="vis">
+		</div>
+	</div>
+</div>
+
+<div class="ui grid" style="margin: auto; width: 1600px;">
+
+	<div class="ten wide column">
+
+		<div style="margin-bottom: 1em;">
+
+  <div class="ui mini fluid stackable menu">
+	<a class="ui item" id="merge">
+		<span data-inverted="" data-tooltip="check 2 topics and merge them into 1 topic">
+			<i class="icon clone"></i>
+			Merge
+		</span>
+	</a>
+	<a class="ui item" id="add-topic">
+		<span data-inverted="" data-tooltip="add a new topic with empty topic words">
+			<i class="plus icon"></i>
+			Add
+		</span>
+	</a>
+	<div class="right menu">
+
+			<a class="ui item" id="gen_json" style="float:right; margin:0; margin-left:0.5em;">
+				<i class="icon download"></i>
+				Export
+			</a> 
+			<a class="ui item" id="reallocation">
+				<span data-inverted="" data-tooltip="move topic words around and click to apply changes">
+					<i class="check icon"></i>
+					Apply Changes and Update
+				</span>
+			</a>
+			<a class="ui item" id="undo">
+				<span data-inverted="" data-tooltip="go back to the previous layout">
+					<i class="icon step backward"></i>
+					Previous Version
+				</span>
+			</a>
+			<a class="ui item" id="restart">
+				<span data-inverted="" data-tooltip="restart from the beginning">
+					<i class="icon undo"></i>
+					Restart
+				</span>
+			</a>
+			<a class="ui action input item">
+				<input type="text" style="width:8em;" placeholder="# topics">
+				<button class="num-topics ui button">Set</button>
+			</a>
+	</div>
+</div>
+
+		</div>
+
+		<div class="ui grid" style="float:right;" id="topics-container">
+			{% include 'interface/topics-container.html' %}
+		</div>
+
+	</div>
+
+	<div class="six wide column">
+
+		<div class="ui top attached segment">
+			<p><span id="numDocFound">{{ num_docs }}</span>/<span id="numDocTotal">{{ num_docs }}</span> documents returned</p>
+		</div>
+		<div class="ui attached segment">
+		  	<div id="docList" class="ui list" style="height: 400px; overflow: scroll;">
+				{% for doc in docs %}
+				<div class="item" doc-idx="{{ doc.idx }}" style="margin: 0.5em 0;">
+						<a class="header" doc-idx="{{ doc.idx }}" topic-ids="{{ doc.topic_ids_str }}">{{ doc.title }}</a>
+					</div>
+				{% endfor %}
+			</div>
+		</div>
+
+			<div class="doc-container" id="docDetail" style="margin-top: 1em;">
+				<div class="ui card" style="width: 100%;">
+					<div class="content">
+					<div class="header _title" style="text-align: center;">Lorem Ipsum</div>
+					<div class="description _body">
+						Lorem ipsum dolor sit amet, et sed iudico mediocrem, per etiam congue quando in, ex tale ullum delicatissimi eam. Munere lobortis ut mel. An quo dico nulla populo. At sea fugit vivendum intellegam, eos accusam insolens ut, vel vidit quaestio reformidans te.
+					</div>
+					</div>
+					<div class="extra content">
+						<div>Topics: <span class="_topic_names">{{ topic_names }}</span></div>
+					</div>
+					<div class="extra content">
+					    <span class="left floated">
+					     	<span class="_signature_count">{{ signature_count }} 0</span> Signed
+					    </span>
+					    <span class="right floated">
+					      	<span class="_signature_threshold">{{ signature_threshold }} 5000</span> Goals
+					    </span>
+					</div>
+					<div class="ui green bottom attached progress">
+						<div class="bar"></div>
+					</div>
+				</div>
+			</div>
+
+	</div>
+
+</div>
+</body>
+</html>
+{% endblock %}

@@ -1,0 +1,26 @@
+<div class="ui list">
+  <div class="item">
+    <div class="ui master checkbox">
+      <input type="checkbox" name="fruits">
+      <label>Topics</label>
+    </div>
+    <div class="list">
+    {% for label, topic in topics %}
+      <div class="item" topic-id="{{ forloop.counter0 }}">
+        <div class="ui child checkbox">
+          <input type="checkbox" name="apple" checked="checked">
+          {% for word, weight, color in topic %}
+          {% if forloop.counter0 == 0 %}
+            <label style="color:#{{ color }};">{{ label }}            
+            </label>
+          {% endif %}
+          {% endfor %}
+        </div>
+        <a class="ui circular label num-topics-2">
+          11
+        </a>
+      </div>
+    {% endfor %}
+    </div>
+  </div>
+</div>
