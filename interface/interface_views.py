@@ -637,3 +637,10 @@ def get_doc(request):
         doc['full_text_html'] = '<p>' + full_text_html + '</p>'
     response = doc
     return HttpResponse(json.dumps(response), content_type='application/json')
+
+def get_tree_graph(request):
+    print(request.POST.get("a"))
+    print(request.POST.get("b"))
+    response = {}
+    response['testing'] = ["hello", "word", "my friend"]
+    return HttpResponse(json.dumps(response), content_type='application/json')

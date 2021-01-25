@@ -3,8 +3,11 @@ $(document).ready(function() {
   $.ajax({
     url: '/api_interface/get_init_cords/',
     type: 'post',
-    success: function(xhr) {
+    success: function (xhr) {
+      init_graph();
       get_cords(xhr['cords']);
+      
+
     },
     error: function(xhr) {
       if (xhr.status == 403) {
@@ -694,7 +697,7 @@ function d3_rgbString (value) {
                           .attr("width",width)
                           .attr("height",height)
                           .style("opacity",0);
-
+                          
     // Define the lasso
     var lasso = d3.lasso()
           .closePathDistance(75) // max distance for the lasso loop to be closed
@@ -860,10 +863,74 @@ function d3_rgbString (value) {
   init_filters();
 
   // click tree node
-  $("#test").click(function() {
-    alert( "Handler for .click() called." );
+  $('body').on('click', '#test', function() {
+    console.log("test  is checked");
+    $("#OrganiseChart-simple").empty();
+    init_graph();
   });
 
+
+  function init_graph() {
+
+    $.ajax({
+      url: '/api_interface/get_tree_graph/',
+      type: 'post',
+      data: {
+        'a': "Apple",
+        'b': "Tree",
+      },
+      success: function(xhr) {
+        console.log(xhr["testing"]);
+      },
+      error: function(xhr) {
+        if (xhr.status == 403) {
+          Utils.notify('error', xhr.responseText);
+        }
+      }
+    });
+
+    var config = {
+      container: "#OrganiseChart-simple",
+    };
+    
+    var parent_node = {
+      text: { name: "Parent no check" },
+      HTMLid: 'test',
+      HTMLclass: 'light-gray',
+    };
+    
+    var first_child = {
+      parent: parent_node,
+      HTMLid: 'test2',
+      HTMLclass: 'light-gray',
+      text: { name: "First child" },
+    };
+    
+    var second_child = {
+      parent: parent_node,
+      text: { name: "Second child" },
+      HTMLclass: 'light-gray',
+    };
+    
+    var third_child = {
+      parent: first_child,
+      text: { name: "3 child" },
+      HTMLclass: 'light-gray',
+    };
+    
+    var fourth_child = {
+      parent: first_child,
+      text: { name: "4 child" },
+      HTMLclass: 'light-gray',
+    };
+    var simple_chart_config1 = [
+      config, parent_node,
+        first_child, second_child, third_child, fourth_child
+    ];
+    html = new Treant( simple_chart_config1 );
+    $( "#OrganiseChart-simple" ).append(html);
+    console.log("graph initialized!");
+  }
 });
 
 
