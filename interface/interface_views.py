@@ -4,6 +4,7 @@ from nltk.tag import pos_tag
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.http import HttpResponse
+from django.http import HttpResponseForbidden
 
 from topiclens.settings import PROJECT_PATH
 
@@ -33,6 +34,7 @@ Dataset = 'WtP-Part1'
 #Dataset = 'WtP-Part2'
 
 WorkDir = os.path.join(PROJECT_PATH, 'corex/')
+current_node = "Origin" #for graph display
 
 ### Preprocessing Begin ###
 print("Preprocess begins...")
@@ -70,7 +72,7 @@ def init_docs():
         doc = CompleteDocs[doc_count].copy()
         doc['idx'] = doc_count
         # indices = [i for i, x in enumerate(
-        #   InitModel.labels[doc_count]) ]
+        # InitModel.labels[doc_count]) ]
         indices = [0, 1]
         doc['topic_ids_str'] = ' '.join(str(x) for x in indices)
         if (Dataset == 'WtP-Part1'):
@@ -85,9 +87,9 @@ def init_docs():
         # CIR 需要 segmentation
     return complete_docs
 
-def gen_cords(InitModel):
+def gen_cords(topic_node):
     global CorexCords
-    doc_topics = InitModel.get_Doc_Topic()
+    doc_topics = topic_node.get_Doc_Topic()
     print(doc_topics.shape)
     '''
     doc_vecs = []
@@ -96,14 +98,14 @@ def gen_cords(InitModel):
         doc_vecs.append(doc_vec)
     '''
 # fast t-SNE
-    from tsne import bh_sne
-    cords = bh_sne(doc_topics)
+    #from tsne import bh_sne
+    #cords = bh_sne(doc_topics)
     #random_state=np.random.RandomState(10)
     print("check1")
 # sklearn TSNE
-    # from sklearn.manifold import TSNE
-    # tsne = TSNE(n_components=2, random_state=RandomSeed)
-    # cords = tsne.fit_transform(doc_vecs)
+    from sklearn.manifold import TSNE
+    tsne = TSNE(n_components=2, random_state=10)
+    cords = tsne.fit_transform(doc_topics)
 # PCA
     # from sklearn.decomposition import PCA
     # pca = PCA(n_components=2, random_state=RandomSeed)
@@ -134,7 +136,7 @@ print("Training init model...")
 start = time.time()
 
 trash_set = tt.topic_tree([], None, np.empty((0, DocWord.shape[1]), int))
-InitModel = tt.topic_tree([], None, DocWord)
+InitModel = tt.topic_tree([], None, DocWord, name="Origin")
 InitModel.make_children(NumTopics)
 
 print("It took " + str(time.time() - start) + " seconds to train the model...")
@@ -281,19 +283,20 @@ def index(request): #render out the top words for each topics
     print("Enter TopicLens...")
     start = time.time()
 
-    global InitModel, CorexCords, CorexLabels
+    global InitModel, CorexCords, CorexLabels, current_node
+    current_node = "Origin"
     labels = CorexLabels[-1]
     context = {}
     context['docs'] = CompleteDocs
     context['num_docs'] = InitModel.doc_nums
     context['topics'] = []
     print('labels=', labels)
-    topic_list = InitModel.get_topics()
-    for n in range(InitModel.topic_nums):
+    topic_list = InitModel.child
+    for n in range(len(topic_list)):
         print("check1: ", n)
         item = []
         count, factor = 0, 0
-        for word, weight in InitModel.get_top_topics(topic=n, n_words=15, Allword=AllWords):
+        for word, weight in InitModel.get_top_topics(topic=topic_list[n], n_words=15, Allword=AllWords):
             print(word, weight)
             if count == 0:
                 factor = 120 / weight
@@ -306,7 +309,7 @@ def index(request): #render out the top words for each topics
     return render(request, "interface/index.html", context)
 
 
-def num_topics(request):
+def num_topics(request): #not used currently?
     print('num topics')
     global CorexCords, CorexLabels
     response = {}
@@ -482,16 +485,16 @@ def split_topics_noupdate(request):
     CorexLabels.append(new_Label)
     color_assign(color_category30, InitModel)
 
-    #cords = gen_cords(InitModel)
-    #CorexCords.append(cords)
-    cords = CorexCords[-1]
+    cords = gen_cords(topic_node)
+    CorexCords.append(cords)
+
     #update topic list
-    topic_list = InitModel.get_topics()
+    topic_list = topic_node.child
     context['topics'] = []
-    for n in range(InitModel.topic_nums):
+    for n in range(len(topic_list)):
         item = []
         count, factor = 0, 0
-        for word, weight in InitModel.get_top_topics(topic=n, n_words=15, Allword=AllWords):
+        for word, weight in InitModel.get_top_topics(topic=topic_list[n], n_words=15, Allword=AllWords):
             if count == 0:
                 factor = 120 / weight
             item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
@@ -602,15 +605,16 @@ def get_doc(request):
     tokens = doc['body'].split(' ')
     html = ""
     for token in tokens:
-        topic_id = get_word_topic(AllWords, InitModel, token)
         #topic_id = -1
-        if (topic_id == -1):
-            html = html + " " + token
+        #if (topic_id == -1):
+        html = html + " " + token
             #print("this happens every single time")
+        '''
+        topic_id = get_word_topic(AllWords, InitModel, token)
         else:
             html = html + " " + "<span title='topic " + \
                 str(topic_id) + "' style='background: #" + color_category30[get_word_topic(
-                    AllWords, InitModel, token)] + ";'>" + token + "</span>"
+                    AllWords, InitModel, token)] + ";'>" + token + "</span>"'''
     # doc['body'] = " ".join(["<span style='background: #" + color_category30[get_word_topic(AllWords, CorexModels[-1], token)] + ";'>" + token + "</span>" for token in tokens])
     doc['body'] = html
     #topic_weights = InitModel.get_Doc_Topic()[doc_idx]
@@ -638,9 +642,67 @@ def get_doc(request):
     response = doc
     return HttpResponse(json.dumps(response), content_type='application/json')
 
+
 def get_tree_graph(request):
-    print(request.POST.get("a"))
-    print(request.POST.get("b"))
     response = {}
-    response['testing'] = ["hello", "word", "my friend"]
+    tree_visual_nodelist = {}
+    tree_visual_nodelist['chart'] = {'container': "#OrganiseChart-simple"}
+    node_stracture = {}
+    get_tree_graph_helper(InitModel, node_stracture)
+    tree_visual_nodelist['nodeStructure'] = node_stracture
+
+    response['tree'] = tree_visual_nodelist
+    return HttpResponse(json.dumps(response), content_type='application/json')
+
+def get_tree_graph_helper(current, tree_dic):
+    global current_node
+    if len(current.child) == 0:
+        return {'HTMLid':"node_key",'HTMLclass':'light-gray', 'text':{ 'name': current.name }}
+        
+    tree_dic['HTMLid'] = "node_key"
+    if current_node == current.name:
+        tree_dic['HTMLclass'] = 'light-red'
+    else:
+        tree_dic['HTMLclass'] = 'light-gray'
+    tree_dic['text'] = { 'name': current.name }
+    tree_dic['children'] = []
+    for child in current.child:
+        tree_dic['children'].append(get_tree_graph_helper(child, {}))
+    
+    return tree_dic
+
+
+def get_tree_node(request): 
+    global CorexLabels, CorexCords, current_node
+    print('Display portions of tree')
+    response = {}
+    context = {}
+    topic_key = request.POST.get("topic")
+    current_node = topic_key
+   
+    topic_node = find_Topic_by_Key(InitModel, topic_key)
+    if len(topic_node.child) == 0: #leaf node is not desired info 
+        return HttpResponseForbidden()
+
+    cords = gen_cords(topic_node)
+    CorexCords.append(cords)
+    #update topic list
+    topic_list = topic_node.child
+    context['topics'] = []
+    for n in range(len(topic_list)):
+        item = []
+        count, factor = 0, 0
+        for word, weight in InitModel.get_top_topics(topic=topic_list[n], n_words=15, Allword=AllWords):
+            if count == 0:
+                factor = 120 / weight
+            item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
+            count += 1
+        context['topics'].append(tuple((topic_list[n].getName(), item)))
+
+    response['topics-container'] = render_to_string(
+        "interface/topics-container.html", context)
+    response['topics-filters'] = render_to_string(
+        "interface/topics-filters.html", context)
+    response['cords'] = cords 
+    
     return HttpResponse(json.dumps(response), content_type='application/json')

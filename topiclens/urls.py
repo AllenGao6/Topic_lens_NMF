@@ -33,5 +33,6 @@ urlpatterns = [
     url(r'^api_interface/last_state/$', interface_views.last_state),
     url(r'^api_interface/num_topics/$', interface_views.num_topics),
     url(r'^api_interface/get_tree_graph/$', interface_views.get_tree_graph),
+    url(r'^api_interface/get_tree_node/$', interface_views.get_tree_node),
 
 ]

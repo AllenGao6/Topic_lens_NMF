@@ -174,7 +174,6 @@ function saveJSON(data, filename){
   $('body').on("click", ".split-topic", function(){
 
     // window.scrollTo(0, 0);
-    alert("this is check!");
     var $topic_container = $(this).closest(".topic-container");
     var num_split = $(this).siblings('input')[0].value;
     var origin_label = $topic_container.find('.topic-label').val();
@@ -242,6 +241,7 @@ function saveJSON(data, filename){
           $("#topics-container").html(xhr['topics-container']);
           $("#topics-filters").html(xhr['topics-filters']);
           init_filters();
+          init_graph();
           get_cords(xhr['cords']);
           window.scrollTo(0, 0);
         },
@@ -863,10 +863,35 @@ function d3_rgbString (value) {
   init_filters();
 
   // click tree node
-  $('body').on('click', '#test', function() {
-    console.log("test  is checked");
-    $("#OrganiseChart-simple").empty();
-    init_graph();
+  $("body").on('click', "#node_key", function(){
+    var topic_id = $(this).find("p").text();
+    seconds = 0;
+    loading = setInterval(function(){ myTimer() }, 1000);
+    
+    $.ajax({
+      url: '/api_interface/get_tree_node/',
+      type: 'post',
+      data: {
+        'topic': topic_id,
+      },
+      success: function(xhr) {
+        
+        $("#topics-container").html(xhr['topics-container']);
+        $("#topics-filters").html(xhr['topics-filters']);
+        init_filters();
+        init_graph();
+        get_cords(xhr['cords']);
+      },
+      error: function (xhr) {
+        alert("Please Select Non-leaf Topic");
+        clearInterval(loading);
+      $("#loading").hide();
+      $("#loading .text").text("Update complete.");
+        if (xhr.status == 403) {
+          Utils.notify('error', xhr.responseText);
+        }
+      }
+    });
   });
 
 
@@ -880,7 +905,12 @@ function d3_rgbString (value) {
         'b': "Tree",
       },
       success: function(xhr) {
-        console.log(xhr["testing"]);
+        //console.log(typeof(xhr['tree']))
+        //console.log(xhr['tree'])
+        $("#OrganiseChart-simple").empty();
+        html = new Treant( xhr['tree'] );
+        $( "#OrganiseChart-simple" ).append(html);
+        console.log("graph initialized!");
       },
       error: function(xhr) {
         if (xhr.status == 403) {
@@ -888,50 +918,9 @@ function d3_rgbString (value) {
         }
       }
     });
-
-    var config = {
-      container: "#OrganiseChart-simple",
-    };
-    
-    var parent_node = {
-      text: { name: "Parent no check" },
-      HTMLid: 'test',
-      HTMLclass: 'light-gray',
-    };
-    
-    var first_child = {
-      parent: parent_node,
-      HTMLid: 'test2',
-      HTMLclass: 'light-gray',
-      text: { name: "First child" },
-    };
-    
-    var second_child = {
-      parent: parent_node,
-      text: { name: "Second child" },
-      HTMLclass: 'light-gray',
-    };
-    
-    var third_child = {
-      parent: first_child,
-      text: { name: "3 child" },
-      HTMLclass: 'light-gray',
-    };
-    
-    var fourth_child = {
-      parent: first_child,
-      text: { name: "4 child" },
-      HTMLclass: 'light-gray',
-    };
-    var simple_chart_config1 = [
-      config, parent_node,
-        first_child, second_child, third_child, fourth_child
-    ];
-    html = new Treant( simple_chart_config1 );
-    $( "#OrganiseChart-simple" ).append(html);
-    console.log("graph initialized!");
   }
 });
+
 
 
 

@@ -159,14 +159,25 @@ class topic_tree:
 
     def get_topics(self):  # return the total number of leaf topics
         array = []
-        self.get_get_topic_helper(array)
+        self.get_topic_helper(array)
         return array
 
-    def get_get_topic_helper(self, array):
+    def get_topic_helper(self, array):
         if len(self.child) == 0:
             array.append(self)
         for i in self.child:
-            i.get_get_topic_helper(array)
+            i.get_topic_helper(array)
+        return array
+
+    def get_all_topics(self):
+        array = []
+        self.get_all_topic_helper(array)
+        return array
+
+    def get_all_topic_helper(self, array):
+        array.append(self)
+        for i in self.child:
+            i.get_all_topic_helper(array)
         return array
 
     def get_Word_Topic(self):  # return a m by 2 2d array, m topics and n words
@@ -194,7 +205,7 @@ class topic_tree:
     # return a list of tuple (word, weight)
     def get_top_topics(self, topic=None, n_words=20, Allword=None):
         tuple_list = []
-        word_topic = self.get_Word_Topic()[topic]
+        word_topic = topic.topic_word
         indices = np.argpartition(word_topic, -1 * n_words)[-1 * n_words:]
         indices = np.flip(indices[np.argsort(word_topic[indices])])
         words = Allword[indices]
@@ -222,7 +233,7 @@ class topic_tree:
         return topic_list
 
     def find_topic_by_key(self, key):
-        for topic in self.get_topics():
+        for topic in self.get_all_topics():
             if topic.getName() == key:
                 return topic
         return None
