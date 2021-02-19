@@ -168,6 +168,10 @@ class topic_tree:
         for i in self.child:
             i.get_topic_helper(array)
         return array
+    
+    def get_all_topic_name(self):
+        return [topic.name for topic in self.get_all_topics()]
+
 
     def get_all_topics(self):
         array = []
@@ -227,13 +231,14 @@ class topic_tree:
     def get_topic_keys(self):
         print("this is reached")
         topic_list = []
-        for count, topic in enumerate(self.get_topics()):
+        for count, topic in enumerate(self.get_all_topics()):
             topic_list.append(topic.getName())
             print(str(count) + " : " + topic.getName())
         return topic_list
 
     def find_topic_by_key(self, key):
         for topic in self.get_all_topics():
+            print(topic.getName())
             if topic.getName() == key:
                 return topic
         return None

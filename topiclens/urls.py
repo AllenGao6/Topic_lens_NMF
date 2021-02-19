@@ -22,7 +22,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^interface/', include('interface.urls')),
 
-    url(r'^api_interface/update_topics/$', interface_views.update_topics),
+    url(r'^api_interface/update_topics_labels/$', interface_views.update_topics_labels),
     url(r'^api_interface/split_topics/$', interface_views.split_topics),
     url(r'^api_interface/split_topics_noupdate/$', interface_views.split_topics_noupdate),
     url(r'^api_interface/merge_topics/$', interface_views.merge_topics),
@@ -34,5 +34,6 @@ urlpatterns = [
     url(r'^api_interface/num_topics/$', interface_views.num_topics),
     url(r'^api_interface/get_tree_graph/$', interface_views.get_tree_graph),
     url(r'^api_interface/get_tree_node/$', interface_views.get_tree_node),
-
+    url(r'^api_interface/doc_filter/$', interface_views.doc_filter),
+    url(r'^api_interface/remove/$', interface_views.remove_topic),
 ]

@@ -86,6 +86,7 @@ def init_docs():
         #doc_count = doc_count + 1
         # CIR 需要 segmentation
     return complete_docs
+    
 
 def gen_cords(topic_node):
     global CorexCords
@@ -243,6 +244,7 @@ def get_init_cords(request):
     global InitModel, CorexCords
     response = {}
     response['cords'] = CorexCords[-1]
+    response['filters'] = [[topic.name, topic.color] for topic in InitModel.get_all_topics()]
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 
@@ -285,12 +287,10 @@ def index(request): #render out the top words for each topics
 
     global InitModel, CorexCords, CorexLabels, current_node
     current_node = "Origin"
-    labels = CorexLabels[-1]
     context = {}
     context['docs'] = CompleteDocs
     context['num_docs'] = InitModel.doc_nums
     context['topics'] = []
-    print('labels=', labels)
     topic_list = InitModel.child
     for n in range(len(topic_list)):
         print("check1: ", n)
@@ -303,11 +303,19 @@ def index(request): #render out the top words for each topics
             item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
             count += 1
         context['topics'].append(tuple((topic_list[n].getName(), item)))
-    context['labels'] = CorexLabels[-1]
     print("It took " + str(time.time() - start) +
           " seconds to enter TopicLens...")
     return render(request, "interface/index.html", context)
 
+def remove_topic(request):
+    global InitModel
+    response = {}
+    topic_id = request.POST.get("topic_id")
+    topic_to_delete = InitModel.find_topic_by_key(topic_id)
+    RemoveT(topic_to_delete)
+    print(InitModel.get_all_topic_name())
+    
+    return HttpResponse(json.dumps(response), content_type='application/json')
 
 def num_topics(request): #not used currently?
     print('num topics')
@@ -477,7 +485,7 @@ def split_topics_noupdate(request):
     child_list = SplitT(topic_node, num_cluster)
     
     for count, child in enumerate(child_list):
-        new_Name = topic_node.getName() + " - " + str(count)
+        new_Name = topic_node.getName() + "-" + str(count)
         print(new_Name)
         child.setName(new_Name)
 
@@ -487,7 +495,7 @@ def split_topics_noupdate(request):
 
     cords = gen_cords(topic_node)
     CorexCords.append(cords)
-
+    response['filters'] = [[topic.name, topic.color] for topic in InitModel.get_all_topics()]
     #update topic list
     topic_list = topic_node.child
     context['topics'] = []
@@ -500,7 +508,7 @@ def split_topics_noupdate(request):
             item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
             count += 1
         context['topics'].append(tuple((topic_list[n].getName(), item)))
-
+    context['structure_class'] = "six wide column topic-container" if len(topic_list) <= 2 else "four wide column topic-container"
     response['topics-container'] = render_to_string(
         "interface/topics-container.html", context)
     response['topics-filters'] = render_to_string(
@@ -510,35 +518,17 @@ def split_topics_noupdate(request):
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 
-def update_topics(request): #will make further changes
-    print('update topics')
-    global CorexCords, CorexLabels
+def update_topics_labels(request): #will make further changes
+    print('update topic labels')
+    global InitModel, CorexLabels
     response = {}
-    context = {}
-    labels = request.POST.getlist('labels[]')
-    json_topics = request.POST.get("json_topics")
-    move_anchor_words = json.loads(json_topics)
-    '''
-    ct_model_move = ct.Corex(n_hidden=len(
-        move_anchor_words), words=AllWords, max_iter=MaxIter, verbose=False, seed=RandomSeed)
-    ct_model_move.fit(DocWord, words=AllWords,
-                      anchors=move_anchor_words, anchor_strength=6)
-    CorexModels.append(ct_model_move)
-    '''
-    cords = gen_cords(ct_model_move)
-    CorexCords.append(cords)
-    CorexLabels.append(labels)
-    context['topics'] = []
-    for n in range(len(ct_model_move.get_topics())):
-        item = []
-        for word, weight in ct_model_move.get_topics(topic=n, n_words=20):
-            item.append(tuple((word, weight * 500, color_category30[n])))
-        context['topics'].append(tuple((labels[n], item)))
-    response['cords'] = cords
-    response['topics-container'] = render_to_string(
-        "interface/topics-container.html", context)
-    response['topics-filters'] = render_to_string(
-        "interface/topics-filters.html", context)
+    new_labels = request.POST.get('new_labels').split("$-$")
+    old_labels = request.POST.get('old_labels').split("$-$")
+    for i in range(len(new_labels)):
+        if new_labels[i] != old_labels[i]:
+            print(old_labels[i], "->", new_labels[i])
+            InitModel.find_topic_by_key(old_labels[i]).setName(new_labels[i])
+
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 
@@ -586,6 +576,7 @@ def init_state(request):
             item.append(tuple((word, weight * 500, color_category30[n])))
         context['topics'].append(tuple((labels[n], item)))
     response = {}
+    context["num_topic"] = len(cur_model.get_topics())
     response['topics-container'] = render_to_string(
         "interface/topics-container.html", context)
     response['cords'] = CorexCords[-1]
@@ -594,11 +585,13 @@ def init_state(request):
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 
-def get_doc(request):
+def get_doc(request): #get info of a particular doc
     print('get_doc')
+    print(current_node)
     global InitModel, CorexCords, CorexLabels
     response = {}
     labels = request.POST.getlist('labels[]')
+    print(labels)
     doc_idx = int(request.POST.get("doc_idx"))
     doc = CompleteDocs[doc_idx].copy()
     # tokens = re.sub(r'([^\s\w]|_)+', '', doc['body']).split(' ')
@@ -698,7 +691,7 @@ def get_tree_node(request):
             item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
             count += 1
         context['topics'].append(tuple((topic_list[n].getName(), item)))
-
+    context['structure_class'] = "six wide column topic-container" if len(topic_list) <= 2 else "four wide column topic-container"
     response['topics-container'] = render_to_string(
         "interface/topics-container.html", context)
     response['topics-filters'] = render_to_string(
@@ -706,3 +699,22 @@ def get_tree_node(request):
     response['cords'] = cords 
     
     return HttpResponse(json.dumps(response), content_type='application/json')
+
+def doc_filter(request):
+    print("filter all documents by tag");
+    global InitModel
+    tag = request.POST.get("tag")
+    response = {}
+    if tag == "View All":
+        response['docs'] = CompleteDocs
+        return HttpResponse(json.dumps(response), content_type='application/json')
+    else:
+        filtered_docs = []
+        tag_doc_index = InitModel.find_topic_by_key(tag).doc_label
+        for index in tag_doc_index:
+            filtered_docs.append(CompleteDocs[index])
+        response['docs'] = filtered_docs
+        print(tag_doc_index) 
+
+        return HttpResponse(json.dumps(response), content_type='application/json')
+

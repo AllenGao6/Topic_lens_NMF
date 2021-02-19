@@ -53,12 +53,20 @@ body {
   margin: 0;
 }
 .light-gray {
-  background-color: #f1f1f3;
+  background-color: #eef1f1;
   cursor: pointer;
+  width: 100px;
 }
 
 .light-red {
-  background-color: #52dbc4;
+  background-color: #cf7428;
   cursor: pointer;
   border-style: outset;
+}
+
+.filterButton {
+  text-shadow: none;
+  background-color: white;
+  padding: 8px;
+  border-radius: 4px;
 }

@@ -6,8 +6,8 @@ $(document).ready(function() {
     success: function (xhr) {
       init_graph();
       get_cords(xhr['cords']);
-      
-
+      //console.log(xhr['filters']);
+      get_doc_filter(xhr['filters'])
     },
     error: function(xhr) {
       if (xhr.status == 403) {
@@ -87,6 +87,22 @@ function saveJSON(data, filename){
     if (result) {
         $(this).closest('.topic-container').remove();
     }
+    let topic_id = $(this).closest('.topic-container').attr('topic-id');
+    $.ajax({
+      url: '/api_interface/remove/',
+      type: 'post',
+      data: {
+        "topic_id": topic_id,
+      },
+      success: function(xhr) {
+        location.reload();
+      },
+      error: function(xhr) {
+        if (xhr.status == 403) {
+          Utils.notify('error', xhr.responseText);
+        }
+      }
+    });
   });
 
   // add new topic
@@ -127,13 +143,31 @@ function saveJSON(data, filename){
   });
 
   // move topic terms
-  $('body').on("click", "#reallocation", function(){
+  $('body').on("click", "#reallocation", function () {
 
-    var labels = $(".topic-container .topic-label").map(function(){
+    var new_labels = $(".topic-container .topic-label").map(function () {
       return $(this).val();
     }).get();
-
+    var old_labels = $(".topic-container .topic-label").map(function () {
+      return $(this).attr('value')
+    }).get();
+    //alert(new_labels+ " "+old_labels);
+    
     var existsEmptyTopic = false;
+    var existsEmptyTopicLabel = false;
+    for (var i = 0; i < new_labels.length; i++){
+      if (new_labels[i].replace(/\s/g, "") === "") {
+        existsEmptyTopicLabel = true
+      }
+    }
+    if (existsEmptyTopicLabel) {
+      $(".warning").show();
+        $(".warning .header").text('a topic label cannot be empty');
+        setTimeout(function() {
+          $('.warning').fadeOut('fast');
+        }, 5000); // <-- time in milliseconds
+      return;
+    }
     $(".topic-words").each(function(){
       if ($(this).find(".label").length == 0) {
         $(".warning").show();
@@ -149,18 +183,14 @@ function saveJSON(data, filename){
     seconds = 0;
     loading = setInterval(function(){ myTimer() }, 1000);
     $.ajax({
-      url: '/api_interface/update_topics/',
+      url: '/api_interface/update_topics_labels/',
       type: 'post',
       data: {
-        'json_topics': get_topics(),
-        'labels': labels,
+        'old_labels': old_labels.join("$-$"),
+        'new_labels': new_labels.join("$-$"),
       },
-      success: function(xhr) {
-        $("#topics-container").html(xhr['topics-container']);
-        $("#topics-filters").html(xhr['topics-filters']);
-        init_filters();
-        get_cords(xhr['cords']);
-        window.scrollTo(0, 0);
+      success: function (xhr) {
+        location.reload();
       },
       error: function(xhr) {
         if (xhr.status == 403) {
@@ -242,6 +272,7 @@ function saveJSON(data, filename){
           $("#topics-filters").html(xhr['topics-filters']);
           init_filters();
           init_graph();
+          get_doc_filter(xhr['filters']);
           get_cords(xhr['cords']);
           window.scrollTo(0, 0);
         },
@@ -485,7 +516,7 @@ function saveJSON(data, filename){
   });
 
   // click a document
-  $('#docList .item .header').on("click", function(){
+  $('body').on("click", "#docList .item .header" ,function () {
     $("#docList .item .header").css("border", "");
     $(this).css("border", "1px solid");
     var $doc_container = $('#docDetail');
@@ -894,6 +925,43 @@ function d3_rgbString (value) {
     });
   });
 
+  //check click for document filter
+  $('body').on("click", "#doc_filt", function () {
+    topic_tag = $(this).find("a").text();
+    $.ajax({
+      url: '/api_interface/doc_filter/',
+      type: 'post',
+      data: {
+        'tag': topic_tag,
+      },
+      success: function(xhr) {
+        $("#docList").empty();
+        
+        docs = xhr['docs']
+        for (var i = 0; i < docs.length; i++){
+          html = '<div class="item" doc-idx="' + docs[i]['idx'] + '" style="margin: 0.5em 0;"><a class="header" doc-idx="' + docs[i]['idx'] + '" topic-ids="' + docs[i]['topic_ids_str'] + '">' + docs[i]['title'] + '</a></div>';
+          $("#docList").append(html);
+        }
+        var doc_num = docs.length.toString();
+        $('#numDocFound').text(doc_num);
+      },
+      error: function (xhr) {
+        if (xhr.status == 403) {
+          Utils.notify('error', xhr.responseText);
+        }
+      }
+    });
+  });
+
+  function get_doc_filter(filters) {
+    $("#doc_filters").empty();
+    var view_all = '<div id="doc_filt" ><a class="ui basic label" style="color: black">' + "View All" + '</a></div>';
+    $("#doc_filters").append(view_all)
+    for(var i = 1; i < filters.length; i++){
+      var filter = '<div id="doc_filt" ><a class="ui basic label" style="color:' + filters[i][1] + '">' + filters[i][0] + '</a></div>';
+      $("#doc_filters").append(filter)
+    }
+  }
 
   function init_graph() {
 
@@ -919,6 +987,8 @@ function d3_rgbString (value) {
       }
     });
   }
+
+ 
 });
 
 

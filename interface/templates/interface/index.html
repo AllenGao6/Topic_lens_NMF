@@ -12,9 +12,9 @@
 		<script src="http://axc.net/code_libraries/lasso/lasso.min.js"></script>
 		
 
-		<script type="text/javascript" src="{% static 'interface/js/app8.js' %}"></script>
+		<script type="text/javascript" src="{% static 'interface/js/app7.js' %}"></script>
 		<link rel="stylesheet" href="{% static 'treant/Treant.css' %}">
-		<link rel="stylesheet" href="{% static 'interface/css/super_simple.css' %}">
+		<link rel="stylesheet" href="{% static 'interface/css/super_simple2.css' %}">
 		<script src="{% static 'interface/js/super_simple.js' %}"></script>
 		<script src="{% static 'treant/vendor/raphael.js' %}"></script>
 		<script src="{% static 'treant/Treant.js' %}"></script>
@@ -153,7 +153,7 @@
 			<a class="ui item" id="reallocation">
 				<span data-inverted="" data-tooltip="move topic words around and click to apply changes">
 					<i class="check icon"></i>
-					Apply Changes and Update
+					Apply Name Changes
 				</span>
 			</a>
 			<a class="ui item" id="undo">
@@ -184,7 +184,14 @@
 	</div>
 
 	<div class="six wide column">
-
+		<div class="ui top attached segment">
+			<p>Documents Filter</p>
+		</div>
+		<div class="ui attached blue segment">
+			<div class="ui relaxed grid" id="doc_filters">
+				Updating...
+			</div>
+		</div>
 		<div class="ui top attached segment">
 			<p><span id="numDocFound">{{ num_docs }}</span>/<span id="numDocTotal">{{ num_docs }}</span> documents returned</p>
 		</div>
@@ -192,8 +199,8 @@
 		  	<div id="docList" class="ui list" style="height: 400px; overflow: scroll;">
 				{% for doc in docs %}
 				<div class="item" doc-idx="{{ doc.idx }}" style="margin: 0.5em 0;">
-						<a class="header" doc-idx="{{ doc.idx }}" topic-ids="{{ doc.topic_ids_str }}">{{ doc.title }}</a>
-					</div>
+					<a class="header" doc-idx="{{ doc.idx }}" topic-ids="{{ doc.topic_ids_str }}">{{ doc.title }}</a>
+				</div>
 				{% endfor %}
 			</div>
 		</div>
@@ -229,3 +236,5 @@
 </body>
 </html>
 {% endblock %}
+
+
