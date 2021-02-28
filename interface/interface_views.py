@@ -30,8 +30,8 @@ from gensim.utils import lemmatize
 
 # Dataset = 'CHO'
 # Dataset = 'Tax'
-Dataset = 'WtP-Part1'
-#Dataset = 'WtP-Part2'
+#Dataset = 'WtP-Part1'
+Dataset = 'WtP-Part2'
 
 WorkDir = os.path.join(PROJECT_PATH, 'corex/')
 current_node = "Origin" #for graph display
@@ -39,13 +39,18 @@ current_node = "Origin" #for graph display
 ### Preprocessing Begin ###
 print("Preprocess begins...")
 start = time.time()
-
+#WVModel = pickle.load(open(WorkDir + "wv_model.pickle", "rb"))
+#TrainTexts = pickle.load(open(WorkDir + "train_texts.pickle", "rb"))
 try:
-    TrainTexts = pickle.load(open(WorkDir + "train_texts.pickle", "rb"))
-    AllWords = np.array(pickle.load(open(WorkDir + "all_words.pickle", "rb")))
-    DocWord = pickle.load(open(WorkDir + "doc_word.pickle", "rb")).toarray()
-    WVModel = pickle.load(open(WorkDir + "wv_model.pickle", "rb"))
-    CompleteDocs = pickle.load(open(WorkDir + "complete_secs.pickle", "rb"))
+    
+    AllWords = pickle.load(open(WorkDir + "set3_883cases/all_words.pickle", "rb"))
+    DocWord = pickle.load(open(WorkDir + "set3_883cases/doc_word.pickle", "rb"))
+    CompleteDocs = pickle.load(open(WorkDir + "set3_883cases/Complete_doc.pickle", "rb"))
+    
+    #AllWords = np.array(pickle.load(open(WorkDir + "all_words.pickle", "rb")))
+    #DocWord = pickle.load(open(WorkDir + "doc_word.pickle", "rb")).toarray()
+    #CompleteDocs = pickle.load(open(WorkDir + "complete_secs.pickle", "rb"))
+
 except (OSError, IOError) as e:
     print("No such file(s).")
 
@@ -131,7 +136,7 @@ print("It took " + str(time.time() - start) + " seconds to preprocess...")
 ### Preprocessing End ###
 
 # Train the Initial CorEx topic model with 20 topics (Takes about 3.74s)
-NumTopics = 5
+NumTopics = int(input("please enter the number of topic: \n"))
 
 print("Training init model...")
 start = time.time()
@@ -215,7 +220,7 @@ def MoveT(T1, T2):  # Move a topic T1 into a new parent T2
 def RemoveT(T1):  # Remove a topic T1
     InitModel.recompute(T1, True, word_topic=T1.topic_word)
     InitModel.cut(T1)
-    InitModel.insert(T1, trash_set)
+    #InitModel.insert(T1, trash_set)
 
 
 def FixT(T1):  # make T1 unaffected by recompute
