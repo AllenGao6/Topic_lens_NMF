@@ -16,6 +16,57 @@ $(document).ready(function() {
     }
   });
 
+  $('#myChart').zingchart({
+    data: {
+      type: 'line',
+      title: {
+        text: 'Topic Comparisons',
+        fontSize: 24,
+      },
+      legend: {
+        draggable: true,
+      },
+      scaleX: {
+        // Set scale label
+        label: { text: 'Number of Topic' },
+        // Convert text on scale indices
+        labels: [ 2,4,6,8,10,12,14 ]
+      },
+      scaleY: {
+        // Scale label with unicode character
+        label: { text: 'Coherence Index' }
+      },
+      plot: {
+        // Animation docs here:
+        // https://www.zingchart.com/docs/tutorials/styling/animation#effect
+        animation: {
+          effect: 'ANIMATION_EXPAND_BOTTOM',
+          method: 'ANIMATION_STRONG_EASE_OUT',
+          sequence: 'ANIMATION_BY_NODE',
+          speed: 275,
+        }
+      },
+      series: [
+        {
+          // plot 1 values, linear data
+          values: [23,20,27,29,25,17,15],
+          text: 'LDA',
+        },
+        {
+          // plot 2 values, linear data
+          values: [35,42,33,49,35,47,35],
+          text: 'NMF'
+        },
+        {
+          // plot 2 values, linear data
+          values: [15,22,13,33,44,27,31],
+          text: 'CorEx'
+        }
+      ]
+    }
+  });
+  
+
   allowDrop = function(ev) {
       ev.preventDefault();
   }
@@ -212,6 +263,15 @@ function saveJSON(data, filename){
     if (words.length <= num_split) {
       $(".warning").show();
       $(".warning .header").text('the number of topic words have to be larger than the number to split');
+      setTimeout(function() {
+        $('.warning').fadeOut('fast');
+      }, 5000); // <-- time in milliseconds
+      return;
+    }
+
+    if (num_split == 1) {
+      $(".warning").show();
+      $(".warning .header").text('The Split Number Cannot Be 1');
       setTimeout(function() {
         $('.warning').fadeOut('fast');
       }, 5000); // <-- time in milliseconds
@@ -634,7 +694,7 @@ function d3_rgbString (value) {
   return d3.rgb(value >> 16, value >> 8 & 0xff, value & 0xff);
 }
 
-  function get_cords(cords){
+function get_cords(cords){
     var margin = {top: 20, right: 20, bottom: 30, left: 40},
         width = 1300 - margin.left - margin.right,
         height = 800 - margin.top - margin.bottom;
@@ -743,7 +803,7 @@ function d3_rgbString (value) {
     svg.call(lasso);
 
     data = cords
-
+    console.log(data);
     data.forEach(function(d) {
       d.cord_x = +d.cord_x;
       d.cord_y = +d.cord_y;
@@ -784,10 +844,12 @@ function d3_rgbString (value) {
         .attr("r", 3.5)
         .attr("cx", function(d) { return x(d.cord_x); })
         .attr("cy", function(d) { return y(d.cord_y); })
-        .attr("topic-id", function(d) { return d.topic_id; })
-        .style("fill", function(d) { return color_category30[d.topic_id]; })
+        .attr("topic-id", function (d) { return d.topic_name; })
+        .attr("iden-index", function (d) { return d.topic_id; })
+        .style("fill", function(d) { return d.color; })
         .on("mouseover", function(d) {
-          var label = $(".topic-container .topic-label[topic-id=" + d.topic_id + "]").val();
+          //var label = $(".topic-container .topic-label[topic-id=" + d.topic_id + "]").val();
+          var label = d.topic_name;
           $(".warning .header").html("Topic Label: " + label + '</br>' + "Doc Title: " + d.title + '</br></br>' + "Doc Content: " + d.body);
           $(".warning.message").show();
         }).on("mouseout", function(d) {
@@ -798,9 +860,9 @@ function d3_rgbString (value) {
 
     var num_topics = $(".topic-container").length;
     for (var i = 0; i < num_topics; i++) {
-      var num_docs = $("circle[topic-id='" + (i).toString() + "']").length;
+      var num_docs = $("circle[iden-index='" + (i).toString() + "']").length;
       // $(".topic-container .num-docs")[i].innerText = num_docs + " ";
-      $(".item .num-topics-2")[i].innerText = num_docs;
+      $(".item .num-topics-id")[i].innerText = num_docs;
     }
 
   }

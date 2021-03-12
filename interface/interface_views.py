@@ -43,13 +43,13 @@ start = time.time()
 #TrainTexts = pickle.load(open(WorkDir + "train_texts.pickle", "rb"))
 try:
     
-    AllWords = pickle.load(open(WorkDir + "set3_883cases/all_words.pickle", "rb"))
-    DocWord = pickle.load(open(WorkDir + "set3_883cases/doc_word.pickle", "rb"))
-    CompleteDocs = pickle.load(open(WorkDir + "set3_883cases/Complete_doc.pickle", "rb"))
+    #AllWords = pickle.load(open(WorkDir + "set3_883cases/all_words.pickle", "rb"))
+    #DocWord = pickle.load(open(WorkDir + "set3_883cases/doc_word.pickle", "rb"))
+    #CompleteDocs = pickle.load(open(WorkDir + "set3_883cases/Complete_doc.pickle", "rb"))
     
-    #AllWords = np.array(pickle.load(open(WorkDir + "all_words.pickle", "rb")))
-    #DocWord = pickle.load(open(WorkDir + "doc_word.pickle", "rb")).toarray()
-    #CompleteDocs = pickle.load(open(WorkDir + "complete_secs.pickle", "rb"))
+    AllWords = np.array(pickle.load(open(WorkDir + "all_words.pickle", "rb")))
+    DocWord = pickle.load(open(WorkDir + "doc_word.pickle", "rb")).toarray()
+    CompleteDocs = pickle.load(open(WorkDir + "complete_secs.pickle", "rb"))
 
 except (OSError, IOError) as e:
     print("No such file(s).")
@@ -57,13 +57,8 @@ except (OSError, IOError) as e:
 
 # --------------Preprocessing Phase-------------------------------
 
-color_category30 = [
-    "d3fe14",  "1da49c", "ccf6e9", "a54509", "7d5bf0", "d08f5d", "fec24c",  "0d906b", "7a9293", "7ed8fe",
-    "d9a742",  "c7ecf9",  "72805e", "dccc69",  "86757e",  "a0acd2",  "fecd0f",  "4a9bda", "bdb363",  "b1485d",
-    "b98b91",  "86df9c",  "6e6089", "826cae", "4b8d5f", "8193e5",  "b39da2", "5bfce4", "df4280", "a2aca6", "ffffff"]
-
-def color_assign(array, parent):
-    parent.assign_topic_color(array)
+def color_assign(parent):
+    parent.assign_topic_color()
 
 def update_topic_keys(topic_list, parent):
     parent.update_topic_keys(topic_list) #need to implement this tomorrow
@@ -96,7 +91,9 @@ def init_docs():
 def gen_cords(topic_node):
     global CorexCords
     doc_topics = topic_node.get_Doc_Topic()
+    doc_labels = topic_node.doc_label
     print(doc_topics.shape)
+
     '''
     doc_vecs = []
     for i in range(len(TrainTexts)):
@@ -124,6 +121,15 @@ def gen_cords(topic_node):
                 'title': CompleteDocs[i]['title'],
                 'doc_id': str(i)}
         topic_idx = 0
+        for topic in topic_node.child:      
+            if topic.contain_doc(doc_labels[i]):
+                line['color'] = topic.getColor()
+                line['topic_name'] =topic.getName()
+                break
+        print(line['color'])
+        print(line['topic_name'])
+        print(" =------------")
+
         for j in range(doc_topics.shape[1]):
             line['topic_' + str(j)] = doc_topics[i][j]
             if (doc_topics[i][j] >= doc_topics[i][topic_idx]):
@@ -160,12 +166,13 @@ start = time.time()
 # state storage for models
 #CorexModels = []
 # CorexModels.append(InitModel)
-CorexCords = []
-CorexCords.append(gen_cords(InitModel))
+
 CorexLabels = []
 labels = [("Topic " + str(i)) for i in range(1, NumTopics + 1)]
 update_topic_keys(labels, InitModel) #store each topic name to corresponding topic_tree leaf class
-color_assign(color_category30, InitModel) #store all assigned color in each leaf class
+color_assign(InitModel) #store all assigned color in each leaf class
+CorexCords = []
+CorexCords.append(gen_cords(InitModel))
 
 CorexLabels.append(labels)
 get_Topic_Keys(InitModel)
@@ -284,7 +291,7 @@ def gen_json(request):
     response = {}
     response['cords'] = CorexCords[-1]
     return HttpResponse(json.dumps(response), content_type='application/json')
-
+ 
 
 def index(request): #render out the top words for each topics
     print("Enter TopicLens...")
@@ -300,14 +307,15 @@ def index(request): #render out the top words for each topics
     for n in range(len(topic_list)):
         print("check1: ", n)
         item = []
-        count, factor = 0, 0
+        count, factor, words_weight = 0, 0, 0
         for word, weight in InitModel.get_top_topics(topic=topic_list[n], n_words=15, Allword=AllWords):
+            words_weight += weight
             print(word, weight)
             if count == 0:
                 factor = 120 / weight
             item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
             count += 1
-        context['topics'].append(tuple((topic_list[n].getName(), item)))
+        context['topics'].append(tuple((topic_list[n].getName(), item, words_weight)))
     print("It took " + str(time.time() - start) +
           " seconds to enter TopicLens...")
     return render(request, "interface/index.html", context)
@@ -474,7 +482,7 @@ def split_topics(request): #not used?
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 
-def split_topics_noupdate(request):
+def split_topics_noupdate(request): 
     global CorexLabels, CorexCords
     print('split topics with update')
     response = {}
@@ -495,9 +503,9 @@ def split_topics_noupdate(request):
         child.setName(new_Name)
 
     new_Label = InitModel.get_topic_keys()
-    CorexLabels.append(new_Label)
-    color_assign(color_category30, InitModel)
-
+    CorexLabels.append(new_Label) 
+    color_assign(InitModel)
+ 
     cords = gen_cords(topic_node)
     CorexCords.append(cords)
     response['filters'] = [[topic.name, topic.color] for topic in InitModel.get_all_topics()]
@@ -506,14 +514,15 @@ def split_topics_noupdate(request):
     context['topics'] = []
     for n in range(len(topic_list)):
         item = []
-        count, factor = 0, 0
+        count, factor, words_weight = 0, 0, 0
         for word, weight in InitModel.get_top_topics(topic=topic_list[n], n_words=15, Allword=AllWords):
+            words_weight += weight
             if count == 0:
                 factor = 120 / weight
             item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
             count += 1
-        context['topics'].append(tuple((topic_list[n].getName(), item)))
-    context['structure_class'] = "six wide column topic-container" if len(topic_list) <= 2 else "four wide column topic-container"
+        context['topics'].append(tuple((topic_list[n].getName(), item, words_weight)))
+    context['over_2'] = True if len(topic_list) <= 2 else False
     response['topics-container'] = render_to_string(
         "interface/topics-container.html", context)
     response['topics-filters'] = render_to_string(
@@ -689,14 +698,15 @@ def get_tree_node(request):
     context['topics'] = []
     for n in range(len(topic_list)):
         item = []
-        count, factor = 0, 0
+        count, factor, words_weight = 0, 0, 0
         for word, weight in InitModel.get_top_topics(topic=topic_list[n], n_words=15, Allword=AllWords):
+            words_weight += weight
             if count == 0:
                 factor = 120 / weight
             item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
             count += 1
-        context['topics'].append(tuple((topic_list[n].getName(), item)))
-    context['structure_class'] = "six wide column topic-container" if len(topic_list) <= 2 else "four wide column topic-container"
+        context['topics'].append(tuple((topic_list[n].getName(), item, words_weight)))
+    context['over_2'] = True if len(topic_list) <= 2 else False
     response['topics-container'] = render_to_string(
         "interface/topics-container.html", context)
     response['topics-filters'] = render_to_string(

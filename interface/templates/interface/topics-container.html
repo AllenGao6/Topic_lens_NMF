@@ -1,5 +1,6 @@
-{% for label, topic in topics %}
-<div class="four wide column topic-container" topic-id="{{ label }}">
+{% for label, topic, words_weight in topics %}
+{% if over_2  %}
+<div class="seven wide column topic-container" topic-id="{{ label }}">
   <div class="ui card">
     <div class="content">
       <div class="header">
@@ -22,7 +23,10 @@
       {% endfor %}
     </div>
 
-
+    <div class="extra content">
+        <a>Topic Weight: {{words_weight}}</a>
+    </div>
+    
 <div class="extra content" style="display: none;">
   <div class="ui mini fluid three item menu">
     <a class="item show-only" topic-id="{{ forloop.counter0 }}" data-inverted="" data-tooltip="show only documents closely related to this topic">
@@ -52,4 +56,63 @@
 
   </div>
 </div>
+{% else %}
+<div class="four wide column topic-container" topic-id="{{ label }}">
+  <div class="ui card">
+    <div class="content">
+      <div class="header">
+
+        <div class="ui mini input" style="width: 80%;">
+          <input class="topic-label" type="text" placeholder="Label..." topic-id="{{ forloop.counter0 }}" value="{{ label }}"></input>
+        </div>
+        <input type="checkbox" class="topic-checkbox" style="float: right;">
+      </div>
+    </div>
+       
+    <div class="extra content">
+        <a>Topic Weight: {{words_weight}}</a>
+    </div>
+
+    <div class="content topic-words" ondrop="drop(event)" ondragover="allowDrop(event)">
+      {% for word, weight, color in topic %}
+        {% if forloop.counter <= 15 %}
+        <div class="ui label" draggable="true" ondragstart="drag(event)" id="word-{{ word }}" style="margin: 0.1em; padding:2px;">
+          {{ word }}
+
+          <span style="font-size:10px; padding-left:{{ weight }}px; background:#{{ color }};"></span>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+ 
+<div class="extra content" style="display: none;">
+  <div class="ui mini fluid three item menu">
+    <a class="item show-only" topic-id="{{ forloop.counter0 }}" data-inverted="" data-tooltip="show only documents closely related to this topic">
+      Solo
+    </a>
+    <a class="item hide-petitions" topic-id="{{ forloop.counter0 }}" data-inverted="" data-tooltip="hide documents closely related to the selected topic">
+      Hide
+    </a>
+    <a class="item show-petitions" topic-id="{{ forloop.counter0 }}" data-inverted="" data-tooltip="highlight documents closely related to the selected topic">
+      Highlight
+    </a>
+  </div>
+</div>
+<div class="extra content">
+<!--   <div style="width: 35%; display: inline;">
+    <span class="num-docs"></span> docs
+  </div> -->
+  <div class="ui mini button delete" data-inverted="" data-tooltip="delete this topic slot">
+    <i class="trash icon"></i>
+    Delete
+  </div>
+  <div class="ui mini action input" style="width: 50%; float: right;">
+    <input type="text" style="width:3em;" placeholder="#">
+    <button class="split-topic ui mini button" topic-id="{{ forloop.counter0 }}" data-inverted="" data-tooltip="specify the number of topics to split">Split</button>
+  </div>
+</div>
+
+  </div>
+</div>
+{% endif %}
 {% endfor %}

@@ -1,8 +1,11 @@
 import numpy as np
 from . import NMF as nmf
+from sklearn.decomposition import NMF
+import random
 
 
 class topic_tree:
+    
 
     def __init__(self, child, parent, X, topic_word=None, doc_topic=None, fixed=False, name=None, doc_label = []):
         self.child = []
@@ -17,6 +20,10 @@ class topic_tree:
             self.doc_label = np.array([i for i in range(self.X.shape[0])])
         else:
             self.doc_label = doc_label
+        self.color_category30 = [
+        "d3fe14",  "1da49c", "ccf6e9", "a54509", "7d5bf0", "d08f5d", "fec24c",  "0d906b", "7a9293", "7ed8fe",
+        "d9a742",  "c7ecf9",  "72805e", "dccc69",  "86757e",  "a0acd2",  "fecd0f",  "4a9bda", "bdb363",  "b1485d",
+        "b98b91",  "86df9c",  "6e6089", "826cae", "4b8d5f", "8193e5",  "b39da2", "5bfce4", "df4280", "a2aca6", "ffffff"]
 
 
     @property
@@ -33,10 +40,19 @@ class topic_tree:
     def getColor(self):
         return self.color
 
-    def assign_topic_color(self, color_array):
-        for count, topic in enumerate(self.get_topics()):
-            topic.setColor(color_array[count])
+    def rand_color(self):
+        '''
+            generate random color code for topics
+        '''
+        random_number = random.randint(0,16777215)
+        hex_number = str(hex(random_number))[2:]
+        return hex_number
+
+    def assign_topic_color(self):
+        for count, topic in enumerate(self.get_all_topics()):
+            topic.setColor(self.color_category30[count])
         print("Color assignment complete")
+
         
     def find_topic_by_doc_index(self, doc_index):#return topic_id and topic_object itself
         topic_return = []
@@ -76,14 +92,22 @@ class topic_tree:
         return [child1, child2]
 
     def make_children(self, child_num):
-        NN_matrix = nmf.NMF(child_num)
-        NN_matrix.fit(self.X)
-
-        doc_list = NN_matrix.doc_to_topic
+        #NN_matrix = nmf.NMF(child_num)
+        #NN_matrix.fit(self.X)
+        print("Calculating NMF ....")
+        NN_matrix =  NMF(n_components=child_num, init='random', random_state=0)
+        doc_list = NN_matrix.fit_transform(self.X)
+        word_to_topic = NN_matrix.components_
+        #doc_list = NN_matrix.doc_to_topic
+        #np.savetxt('test1.txt', doc_list, delimiter=',') 
+        #print("Error Index: " + np.linalg.norm(self.X - doc_list.dot(word_to_topic)))
         ind = np.argpartition(doc_list, -1, axis=1)[:, doc_list.shape[1]-1]
+        #np.savetxt('test2.txt', ind, delimiter=',')'''
+        
+        #determine the distribution of document 
         for child_num in range(child_num):
             child_topic = topic_tree([], self, self.X[np.where(ind == child_num)[0]], 
-                        topic_word=NN_matrix.word_to_topic[child_num], doc_topic=NN_matrix.doc_to_topic[:, child_num], doc_label=self.doc_label[np.where(ind == child_num)[0]])
+                        topic_word=word_to_topic[child_num], doc_topic=doc_list[:, child_num], doc_label=self.doc_label[np.where(ind == child_num)[0]])
             self.child.append(child_topic)
         return self.child
 

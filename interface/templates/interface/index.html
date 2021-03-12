@@ -10,11 +10,15 @@
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.8/d3.min.js"></script>
 		<script src="http://axc.net/code_libraries/lasso/lasso.min.js"></script>
+
+		<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+		<script src="https://cdn.zingchart.com/zingchart.jquery.min.js"></script>
+		
 		
 
-		<script type="text/javascript" src="{% static 'interface/js/app7.js' %}"></script>
+		<script type="text/javascript" src="{% static 'interface/js/app6.js' %}"></script>
 		<link rel="stylesheet" href="{% static 'treant/Treant.css' %}">
-		<link rel="stylesheet" href="{% static 'interface/css/super_simple2.css' %}">
+		<link rel="stylesheet" href="{% static 'interface/css/super_simple1.css' %}">
 		<script src="{% static 'interface/js/super_simple.js' %}"></script>
 		<script src="{% static 'treant/vendor/raphael.js' %}"></script>
 		<script src="{% static 'treant/Treant.js' %}"></script>
@@ -113,7 +117,7 @@
 </div>
 
 
-<div class="ui grid" style="margin: auto; width: 1600px;">
+<div class="ui grid" style="margin: 1.8%; width: 1600px;">
 	<div class="three wide column">
 		<div class="ui segment" id="topics-filters">
 			{% include 'interface/topics-filters.html' %}
@@ -125,8 +129,16 @@
 	</div>
 </div>
 
-<div class="ui grid" style="margin: auto; width: 1600px;">
+<div class="ui grid">
+	<div class="eight wide column">
+		<div id="myChart" class="test_chart"></div>
+	</div>
+</div>
 
+
+
+<div class="ui grid" style="margin: auto; width: 1600px;">
+	
 	<div class="ten wide column">
 
 		<div style="margin-bottom: 1em;">

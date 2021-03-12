@@ -5,7 +5,7 @@
       <label>Topics</label>
     </div>
     <div class="list">
-    {% for label, topic in topics %}
+    {% for label, topic, weights in topics %}
       <div class="item" topic-id="{{ forloop.counter0 }}">
         <div class="ui child checkbox">
           <input type="checkbox" name="apple" checked="checked">
@@ -16,7 +16,7 @@
           {% endif %}
           {% endfor %}
         </div>
-        <a class="ui circular label num-topics-2">
+        <a class="ui circular label num-topics-id">
           11
         </a>
       </div>
