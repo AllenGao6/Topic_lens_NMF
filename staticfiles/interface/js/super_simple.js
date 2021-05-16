@@ -2,7 +2,7 @@
 var simple_chart_config = {
 	chart: {
 		container: "#OrganiseChart-simple",
-		animateOnInit: true
+		//animateOnInit: true
 	},
 	
 	nodeStructure: {
@@ -26,8 +26,7 @@ var config = {
 
 var parent_node = {
 	text: { name: "Parent no check" },
-	HTMLid: 'parent',
-	HTMLclass: 'light-gray'
+	HTMLid: 'test',
 };
 
 var first_child = {
@@ -40,7 +39,22 @@ var second_child = {
 	text: { name: "Second child" }
 };
 
+var third_child = {
+	parent: first_child,
+	text: { name: "3 child" }
+};
+
+var fourth_child = {
+	parent: first_child,
+	text: { name: "4 child" }
+};
+
+var fifth_child = {
+	parent: first_child,
+	text: { name: "4 child" }
+};
+
 var simple_chart_config = [
 	config, parent_node,
-		first_child, second_child 
+		first_child, second_child, third_child, fourth_child, fifth_child
 ];

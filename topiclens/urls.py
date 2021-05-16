@@ -20,8 +20,10 @@ from interface import interface_views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    #interface page
     url(r'^interface/', include('interface.urls')),
-
+    
+    #api calls
     url(r'^api_interface/update_topics_labels/$', interface_views.update_topics_labels),
     url(r'^api_interface/split_topics/$', interface_views.split_topics),
     url(r'^api_interface/split_topics_noupdate/$', interface_views.split_topics_noupdate),
@@ -36,4 +38,8 @@ urlpatterns = [
     url(r'^api_interface/get_tree_node/$', interface_views.get_tree_node),
     url(r'^api_interface/doc_filter/$', interface_views.doc_filter),
     url(r'^api_interface/remove/$', interface_views.remove_topic),
+
+    #uploading page
+    url(r'', include('dataProcess.urls')),
+
 ]

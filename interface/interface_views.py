@@ -28,31 +28,6 @@ from . import topic_tree as tt
 
 from gensim.utils import lemmatize
 
-# Dataset = 'CHO'
-# Dataset = 'Tax'
-#Dataset = 'WtP-Part1'
-Dataset = 'WtP-Part2'
-
-WorkDir = os.path.join(PROJECT_PATH, 'corex/')
-current_node = "Origin" #for graph display
-
-### Preprocessing Begin ###
-print("Preprocess begins...")
-start = time.time()
-#WVModel = pickle.load(open(WorkDir + "wv_model.pickle", "rb"))
-#TrainTexts = pickle.load(open(WorkDir + "train_texts.pickle", "rb"))
-try:
-    
-    #AllWords = pickle.load(open(WorkDir + "set3_883cases/all_words.pickle", "rb"))
-    #DocWord = pickle.load(open(WorkDir + "set3_883cases/doc_word.pickle", "rb"))
-    #CompleteDocs = pickle.load(open(WorkDir + "set3_883cases/Complete_doc.pickle", "rb"))
-    
-    AllWords = np.array(pickle.load(open(WorkDir + "all_words.pickle", "rb")))
-    DocWord = pickle.load(open(WorkDir + "doc_word.pickle", "rb")).toarray()
-    CompleteDocs = pickle.load(open(WorkDir + "complete_secs.pickle", "rb"))
-
-except (OSError, IOError) as e:
-    print("No such file(s).")
 
 
 # --------------Preprocessing Phase-------------------------------
@@ -138,11 +113,42 @@ def gen_cords(topic_node):
         lines.append(line)
     return lines
 
+
+#----------------------------------------------------------------------------------------------
+#code below to fix
+#----------------------------------------------------------------------------------------------
+'''
+# Train the Initial CorEx topic model with 20 topics (Takes about 3.74s)
+#NumTopics = int(input("please enter the number of topic: \n"))
+NumTopics = 5
+# Dataset = 'CHO'
+# Dataset = 'Tax'
+#Dataset = 'WtP-Part1'
+Dataset = 'WtP-Part2'
+
+WorkDir = os.path.join(PROJECT_PATH, 'corex/')
+current_node = "Origin" #for graph display
+
+### Preprocessing Begin ###
+print("Preprocess begins...")
+start = time.time()
+#WVModel = pickle.load(open(WorkDir + "wv_model.pickle", "rb"))
+#TrainTexts = pickle.load(open(WorkDir + "train_texts.pickle", "rb"))
+try:
+    
+    #AllWords = pickle.load(open(WorkDir + "set3_883cases/all_words.pickle", "rb"))
+    #DocWord = pickle.load(open(WorkDir + "set3_883cases/doc_word.pickle", "rb"))
+    #CompleteDocs = pickle.load(open(WorkDir + "set3_883cases/Complete_doc.pickle", "rb"))
+    
+    AllWords = np.array(pickle.load(open(WorkDir + "all_words.pickle", "rb")))
+    DocWord = pickle.load(open(WorkDir + "doc_word.pickle", "rb")).toarray()
+    CompleteDocs = pickle.load(open(WorkDir + "complete_secs.pickle", "rb"))
+
+except (OSError, IOError) as e: 
+    print("No such file(s).")
 print("It took " + str(time.time() - start) + " seconds to preprocess...")
 ### Preprocessing End ###
 
-# Train the Initial CorEx topic model with 20 topics (Takes about 3.74s)
-NumTopics = int(input("please enter the number of topic: \n"))
 
 print("Training init model...")
 start = time.time()
@@ -162,6 +168,7 @@ print("It took " + str(time.time() - start) + " seconds to init docs...")
 
 print("Init global variables...")
 start = time.time()
+
 
 # state storage for models
 #CorexModels = []
@@ -190,7 +197,10 @@ print("It took " + str(time.time() - start) +
 #         topic_words.append(list(words))
 #     return topic_words
 # End
-# --------------Support Function-------------------------------
+'''
+#----------------------------------------------------------------------------------------------
+#code above to fix
+#----------------------------------------------------------------------------------------------
 
 
 def translate_topic_word(word_topic, maxWord):

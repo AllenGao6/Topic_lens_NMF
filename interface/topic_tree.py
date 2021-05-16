@@ -22,7 +22,7 @@ class topic_tree:
             self.doc_label = doc_label
         self.color_category30 = [
         "d3fe14",  "1da49c", "ccf6e9", "a54509", "7d5bf0", "d08f5d", "fec24c",  "0d906b", "7a9293", "7ed8fe",
-        "d9a742",  "c7ecf9",  "72805e", "dccc69",  "86757e",  "a0acd2",  "fecd0f",  "4a9bda", "bdb363",  "b1485d",
+        "d9a742",  "c7ecf9",  "72805e", "dccc69",  "86757e", "a0acd2",  "fecd0f",  "4a9bda", "bdb363",  "b1485d",
         "b98b91",  "86df9c",  "6e6089", "826cae", "4b8d5f", "8193e5",  "b39da2", "5bfce4", "df4280", "a2aca6", "ffffff"]
 
 

@@ -1,0 +1,46 @@
+{% load static %}
+<html>
+	<head>
+        <title>Welcome to Topiclens</title>
+        <title>Topic Lens Demo</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.css" rel="stylesheet" class="ui" />
+
+        <link rel="stylesheet" href="{% static 'dataProcess/css/upload.css' %}">
+    </head>
+
+<body>
+
+    <div class="holder" >
+        <h1 style="position: relative; text-align: center;">Please either upload a csv file containing row text data or upload a system generated json file</h1>
+        <div class="ui placeholder segment holder" style="height: auto;padding:10px;">
+            <div class="ui two column stackable center aligned grid">
+            <div class="ui vertical divider">Or</div>
+            <div class="middle aligned row">
+                <div class="column">
+                <div class="ui icon header">
+                    <i class="file alternative icon"></i>
+                    Upload a csv file (each row contains one doc)
+                </div>
+                <fieldset>
+                    <input type="file" name="File Upload" id="txtFileUpload" accept=".csv" />
+                </fieldset>
+                </div>
+                <div class="column">
+                <div class="ui icon header">
+                    <i class="history icon"></i>
+                    import a saved json file
+                </div>
+                <fieldset>
+                    <input type="file" name="File Upload" id="txtFileUpload" accept=".json" />
+                </fieldset>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <script src="{% static 'dataProcess/js/upload.js' %}"></script>
+</body>
+</html>
