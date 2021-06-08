@@ -1,5 +1,6 @@
 $(document).ready(function() {
 
+	is_file_upload = false;
     // The event listener for the file upload
     document.getElementById('txtFileUpload').addEventListener('change', upload, false);
 
@@ -26,7 +27,30 @@ $(document).ready(function() {
 		return [title_list, content_list];
 	}
 		
-		
+	$('body').on("click", "#start", function () {
+		if (!is_file_upload) {
+			alert("Please Upload a Valid File");
+		} else {
+			$("#start").text('computing the range of optimal topic number... please wait');
+			$("#start").addClass('disabled');
+			$.ajax({
+				url: 'upload/analyze/',
+				type: 'POST',
+				data: {
+				},
+				success: function (xhr) {
+					$('.holder').hide()
+					$('.analyze_holder').show()
+				  	console.log("success222!");
+				},
+				error: function(xhr) {
+				  if (xhr.status == 403) {
+					Utils.notify('error', xhr.responseText);
+				  }
+				}
+			  });
+		}
+	});
 	
     // Method that reads and processes the selected file
     function upload(evt) {
@@ -44,6 +68,7 @@ $(document).ready(function() {
 				var data_list = csvToArray(data2);
 				
 				if (data2 && data2.length > 0) { // if data recieved successful by browser
+					$('#start').addClass('disabled loading');
 					$.ajax({
 						url: 'upload/data_recieve/',
 						type: 'POST',
@@ -52,7 +77,9 @@ $(document).ready(function() {
 							'contents': data_list[1],
 						},
 						success: function(xhr) {
-							
+							is_file_upload = true;
+							$('#start').removeClass('disabled loading');
+							$("#start").text('Start Analyzing');
 						  console.log("success!");
 						},
 						error: function(xhr) {

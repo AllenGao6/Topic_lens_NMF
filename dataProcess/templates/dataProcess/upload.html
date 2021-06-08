@@ -12,7 +12,9 @@
     </head>
 
 <body>
-
+    <div class="analyze_holder" hidden>
+        <h1>this is the analyze page</h1>     
+    </div>
     <div class="holder" >
         <h1 style="position: relative; text-align: center;">Please either upload a csv file containing row text data or upload a system generated json file</h1>
         <div class="ui placeholder segment holder" style="height: auto;padding:10px;">
@@ -40,6 +42,8 @@
             </div>
             </div>
         </div>
+        <br/>
+        <div class="ui bottom attached button" id="start" tabindex="0">Analyze</div>
     </div>
     <script src="{% static 'dataProcess/js/upload.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.11/jquery.csv.min.js" integrity="sha512-Y8iWYJDo6HiTo5xtml1g4QqHtl/PO1w+dmUpQfQSOTqKNsMhExfyPN2ncNAe9JuJUSKzwK/b6oaNPop4MXzkwg==" crossorigin="anonymous"></script>

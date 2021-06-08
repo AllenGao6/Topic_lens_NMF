@@ -117,10 +117,10 @@ def gen_cords(topic_node):
 #----------------------------------------------------------------------------------------------
 #code below to fix
 #----------------------------------------------------------------------------------------------
-'''
+
 # Train the Initial CorEx topic model with 20 topics (Takes about 3.74s)
 #NumTopics = int(input("please enter the number of topic: \n"))
-NumTopics = 5
+NumTopics = 10 
 # Dataset = 'CHO'
 # Dataset = 'Tax'
 #Dataset = 'WtP-Part1'
@@ -197,7 +197,7 @@ print("It took " + str(time.time() - start) +
 #         topic_words.append(list(words))
 #     return topic_words
 # End
-'''
+
 #----------------------------------------------------------------------------------------------
 #code above to fix
 #----------------------------------------------------------------------------------------------
@@ -340,9 +340,9 @@ def remove_topic(request):
     
     return HttpResponse(json.dumps(response), content_type='application/json')
 
-def num_topics(request): #not used currently?
+def num_topics(request): 
     print('num topics')
-    global CorexCords, CorexLabels
+    global CorexCords, CorexLabels, InitModel
     response = {}
     context = {}
     num_topics = int(request.POST.get("num_topics"))
@@ -356,23 +356,57 @@ def num_topics(request): #not used currently?
     labels = [("Topic " + str(i)) for i in range(0, num_topics)]
     CorexLabels.append(labels)
     '''
+
+    
+    start = time.time()
+    InitModel = tt.topic_tree([], None, DocWord, name="Origin")
+    InitModel.make_children(num_topics)
+
+    print("It took " + str(time.time() - start) + " seconds to train the model...")
+
+    print("Init docs...")
+    start = time.time()
+
+    CompleteDocs = init_docs()
+
+    print("It took " + str(time.time() - start) + " seconds to init docs...")
+
+    print("Init global variables...")
+    start = time.time()
+
+
+    CorexLabels = []
+    labels = [("Topic " + str(i)) for i in range(1, num_topics + 1)]
+    update_topic_keys(labels, InitModel) #store each topic name to corresponding topic_tree leaf class
+    color_assign(InitModel) #store all assigned color in each leaf class
+    cords = gen_cords(InitModel)
+    CorexCords = [cords]
+
+    CorexLabels.append(labels)
+    get_Topic_Keys(InitModel)
+
+    response['filters'] = [[topic.name, topic.color] for topic in InitModel.get_all_topics()]
+    
+    topic_list = InitModel.child
     context['topics'] = []
-    for n in range(InitModel.topic_nums):
+    for n in range(len(topic_list)):
         item = []
-        count, factor = 0, 0
-        for word, weight in InitModel.get_top_topics(topic=n, n_words=20, Allword=AllWords):
+        count, factor, words_weight = 0, 0, 0
+        for word, weight in InitModel.get_top_topics(topic=topic_list[n], n_words=15, Allword=AllWords):
+            words_weight += weight
             if count == 0:
                 factor = 120 / weight
-            item.append(tuple((word, factor * weight, color_category30[n])))
+            item.append(tuple((word, factor * weight, topic_list[n].getColor() )))
             count += 1
-        context['topics'].append(tuple((labels[n], item)))
+        context['topics'].append(tuple((topic_list[n].getName(), item, words_weight)))
+    context['over_2'] = True if len(topic_list) <= 2 else False
     response['topics-container'] = render_to_string(
         "interface/topics-container.html", context)
-    response['cords'] = cords
     response['topics-filters'] = render_to_string(
         "interface/topics-filters.html", context)
+    response['cords'] = cords
+    
     return HttpResponse(json.dumps(response), content_type='application/json')
-
 
 def merge_topics(request): #not used?
     print('merge topics')
@@ -661,6 +695,7 @@ def get_doc(request): #get info of a particular doc
 
 
 def get_tree_graph(request):
+    global InitModel
     response = {}
     tree_visual_nodelist = {}
     tree_visual_nodelist['chart'] = {'container': "#OrganiseChart-simple"}

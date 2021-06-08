@@ -16,7 +16,7 @@ $(document).ready(function() {
     }
   });
 
-  $('#myChart').zingchart({
+  /*$('#myChart').zingchart({
     data: {
       type: 'line',
       title: {
@@ -64,7 +64,7 @@ $(document).ready(function() {
         }
       ]
     }
-  });
+  });*/
   
 
   allowDrop = function(ev) {
@@ -102,8 +102,7 @@ function saveJSON(data, filename){
     a.download = filename
     a.href = window.URL.createObjectURL(blob)
     a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-    e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-    a.dispatchEvent(e)
+    
 }
 
   // gen_json
@@ -562,7 +561,9 @@ function saveJSON(data, filename){
           $("#topics-container").html(xhr['topics-container']);
           $("#topics-filters").html(xhr['topics-filters']);
           init_filters();
+          init_graph();
           get_cords(xhr['cords']);
+          get_doc_filter(xhr['filters'])
         },
         error: function(xhr) {
           if (xhr.status == 403) {

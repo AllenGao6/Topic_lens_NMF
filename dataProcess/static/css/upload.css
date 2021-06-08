@@ -1,7 +1,8 @@
 .holder {
+  position: absolute;
+  top: 800px;
   width: 1000px;
   height: 800px;
   margin: auto;
-  margin-top: 3%;
   overflow: hidden;
 }

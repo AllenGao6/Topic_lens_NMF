@@ -188,7 +188,7 @@ function saveJSON(data, filename){
     if ($.isNumeric(num_split) && num_split > 0) {
       seconds = 0;
       loading = setInterval(function(){ myTimer() }, 1000);
-      await sleep(3000);
+      //await sleep(3000);
       $.ajax({
         url: '/api_interface/split_topics_noupdate/',
         type: 'post',

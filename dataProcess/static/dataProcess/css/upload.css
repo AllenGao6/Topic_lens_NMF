@@ -5,3 +5,8 @@
   margin-top: 3%;
   overflow: hidden;
 }
+
+.analyze_holder {
+  width: 1000px;
+  height: 800px;
+}
