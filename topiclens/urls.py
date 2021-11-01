@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^api_interface/get_tree_node/$', interface_views.get_tree_node),
     url(r'^api_interface/doc_filter/$', interface_views.doc_filter),
     url(r'^api_interface/remove/$', interface_views.remove_topic),
+    url(r'^api_interface/set_relev_index/$', interface_views.set_relevance),
 
     #uploading page
     url(r'', include('dataProcess.urls')),

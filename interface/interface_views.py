@@ -643,13 +643,13 @@ def init_state(request):
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 
-def get_doc(request): #get info of a particular doc
+    
+
+def get_doc(request): # get info of a particular doc
     print('get_doc')
-    print(current_node)
     global InitModel, CorexCords, CorexLabels
     response = {}
     labels = request.POST.getlist('labels[]')
-    print(labels)
     doc_idx = int(request.POST.get("doc_idx"))
     doc = CompleteDocs[doc_idx].copy()
     # tokens = re.sub(r'([^\s\w]|_)+', '', doc['body']).split(' ')
@@ -675,12 +675,31 @@ def get_doc(request): #get info of a particular doc
     #indices = [InitModel.label[doc_idx]] #instead of label index, should return topic name and color, maybe objest itself
     #indices = sorted(indices, key=lambda x: topic_weights[x], reverse=True)
 
-
+    # getting the number of topic name and color
     indices_topic = InitModel.find_topic_by_doc_index(doc_idx)
+    print('topic assignment', indices_topic)
     print(' '.join(x[1].getColor() for x in indices_topic))
     print(' '.join(x[1].getName() for x in indices_topic))
     doc['color_list'] = ' '.join(x[1].getColor() for x in indices_topic)
     doc['label_list'] = '^'.join(x[1].getName() for x in indices_topic)
+
+    #getting the corresponding key words related to this topic in this document
+    doc_binary = DocWord[doc_idx]
+    keywords = []
+    for i in range(len(indices_topic)):
+        topic = indices_topic[i][1]
+
+        #getting the relevance information regarding this doc and topic
+        doc['relevance'] = topic.get_doc_relevance(doc_idx)
+
+        key_words = InitModel.get_top_topics(topic=topic, n_words=15, Allword=AllWords, return_indice=True)
+        for index in key_words:
+            if doc_binary[index] != 0:
+                keywords.append([topic.getColor(), AllWords[index]])
+    doc['keyword_list'] = '^'.join([x[0] + '~' + x[1] for x in keywords])
+    
+
+
     #doc['labels'] = labels
     if (Dataset == 'CHO' or Dataset == 'Tax'):
         full_text = doc['full_text']
@@ -761,7 +780,7 @@ def get_tree_node(request):
     return HttpResponse(json.dumps(response), content_type='application/json')
 
 def doc_filter(request):
-    print("filter all documents by tag");
+    print("filter all documents by tag")
     global InitModel
     tag = request.POST.get("tag")
     response = {}
@@ -770,11 +789,29 @@ def doc_filter(request):
         return HttpResponse(json.dumps(response), content_type='application/json')
     else:
         filtered_docs = []
-        tag_doc_index = InitModel.find_topic_by_key(tag).doc_label
-        for index in tag_doc_index:
+        topic_selected = InitModel.find_topic_by_key(tag)
+        for index in topic_selected.doc_label:
             filtered_docs.append(CompleteDocs[index])
         response['docs'] = filtered_docs
-        print(tag_doc_index) 
+        response['keys'] = []
+        for word, weight in InitModel.get_top_topics(topic=topic_selected, n_words=15, Allword=AllWords):
+            response['keys'].append(word)
+        #print(topic_selected.doc_label) 
 
         return HttpResponse(json.dumps(response), content_type='application/json')
+
+
+def set_relevance(request):
+    global InitModel
+
+    doc_index = int(request.POST.get("doc_index"))
+    relevance_index = int(request.POST.get("relevance"))
+    print(doc_index, relevance_index)
+    #search for topic that related to this doc index
+    topic_list = InitModel.find_topic_by_doc_index(doc_index)
+    for topic in topic_list:
+        topic[1].set_doc_relevance(doc_index, relevance_index)
+    
+    return HttpResponse(json.dumps({'Message': "Success!"}), content_type='application/json')
+
 

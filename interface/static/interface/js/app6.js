@@ -619,6 +619,7 @@ var get_doc = function($doc_container, doc_idx){
       },
       success: function(xhr) {
         $doc_container.find('._title').text(xhr.title);
+        $doc_container.find('#rate_relevant').empty();
         $doc_container.find('._body').empty();
         $doc_container.find('._body').html(xhr.body);
         $doc_container.find('._signature_count').text(xhr.signature_count);
@@ -639,6 +640,28 @@ var get_doc = function($doc_container, doc_idx){
             $doc_container.find('._topic_names').append(label);
           }
         }
+        
+        //key words 
+        $doc_container.find('._key_words').empty();
+        if (xhr.keyword_list != "") {
+          var keywords = xhr.keyword_list.split('^');
+          for (var i = 0; i < keywords.length; i++) {
+            items = keywords[i].split('~');
+            //console.log(color, text);
+            var label = '<a class="ui basic label" style="color:' + items[0] + '">' + items[1] + '</a>';
+            $doc_container.find('._key_words').append(label);
+          }
+        }
+
+        //relevant variable
+        class1 = xhr.relevance == -1 ? 'class="ui red button active"' : 'class="ui button"';
+        class2 = xhr.relevance == 0 ? 'class="ui blue button active"' : 'class="ui button"';
+        class3 = xhr.relevance == 1 ? 'class="ui green button active"' : 'class="ui button"'
+        
+        not_relvance_html = '<button ' + class1 + ' tabindex="3" id="1" value="-1">Not Relevant</button><div class="or"></div>';
+        no_info_html = '<button ' + class2 + ' tabindex="3" id="2" value="0">N/A</button><div class="or"></div>';
+        relvance_html = '<button ' + class3 + ' tabindex="3" id="3" value="1">Relevant</button>';
+        $doc_container.find('#rate_relevant').html(not_relvance_html+no_info_html+relvance_html);
 
         // sig progress
         $doc_container.find('.progress').progress({
@@ -990,7 +1013,9 @@ function get_cords(cords){
 
   //check click for document filter
   $('body').on("click", "#doc_filt", function () {
-    topic_tag = $(this).find("a").text();
+    var topic_tag = $(this).find("a").text();
+    var color = $(this).find("a").css("color");
+
     $.ajax({
       url: '/api_interface/doc_filter/',
       type: 'post',
@@ -1007,6 +1032,8 @@ function get_cords(cords){
         }
         var doc_num = docs.length.toString();
         $('#numDocFound').text(doc_num);
+        $("#keyword_filters").empty()
+        get_keyword_filter(xhr['keys'], color, topic_tag);
       },
       error: function (xhr) {
         if (xhr.status == 403) {
@@ -1016,13 +1043,29 @@ function get_cords(cords){
     });
   });
 
+  //check click for key word filter
+  $('body').on("click", "#key_filt", function () {
+    var key_tag = $(this).find("a").text();
+    alert('processing...');
+  });
+
+  //append element to doc filter
   function get_doc_filter(filters) {
     $("#doc_filters").empty();
+    $("#keyword_filters").empty()
     var view_all = '<div id="doc_filt" ><a class="ui basic label" style="color: black">' + "View All" + '</a></div>';
     $("#doc_filters").append(view_all)
     for(var i = 1; i < filters.length; i++){
       var filter = '<div id="doc_filt" ><a class="ui basic label" style="color:' + filters[i][1] + '">' + filters[i][0] + '</a></div>';
       $("#doc_filters").append(filter)
+    }
+  }
+  //append element to key word filter
+  function get_keyword_filter(filters, color, topic) {
+    $("#keyword_filters").empty();
+    for(var i = 1; i < filters.length; i++){
+      var filter = '<div id="key_filt" ><a class="ui basic label" topic="'+ topic + '" style="color:' + color + '">' + filters[i] + '</a></div>';
+      $("#keyword_filters").append(filter)
     }
   }
 
@@ -1051,9 +1094,85 @@ function get_cords(cords){
     });
   }
 
- 
+  function change_relev_button(index) {
+    var $doc_container = $('#docDetail');
+    $doc_container.find('#rate_relevant').empty();
+    class1 = index == -1 ? 'class="ui red button active"' : 'class="ui button"';
+    class2 = index == 0 ? 'class="ui blue button active"' : 'class="ui button"';
+    class3 = index == 1 ? 'class="ui green button active"' : 'class="ui button"'
+    
+    not_relvance_html = '<button ' + class1 + ' tabindex="3" id="1" value="-1">Not Relevant</button><div class="or"></div>';
+    no_info_html = '<button ' + class2 + ' tabindex="3" id="2" value="0">N/A</button><div class="or"></div>';
+    relvance_html = '<button ' + class3 + ' tabindex="3" id="3" value="1">Relevant</button>';
+    $doc_container.find('#rate_relevant').html(not_relvance_html+no_info_html+relvance_html);
+  }
+  
+  //clicked not relevant button
+  $("body").on('click', "#1", function () {
+    var rele_value = $(this).attr('value');
+    var doc_index = $(this).closest(".doc-container").attr('doc-idx')
+    $.ajax({
+      url: '/api_interface/set_relev_index/',
+      type: 'post',
+      data: {
+        'doc_index': doc_index,
+        'relevance': rele_value,
+      },
+      success: function (xhr) {
+        change_relev_button(-1);
+      },
+      error: function (xhr) {
+        alert("Error Occured");
+        if (xhr.status == 403) {
+          Utils.notify('error', xhr.responseText);
+        }
+      }
+    });
+  });
+
+  //clicked no info button
+  $("body").on('click', "#2", function () {
+    var rele_value = $(this).attr('value');
+    var doc_index = $(this).closest( ".doc-container" ).attr('doc-idx')
+    $.ajax({
+      url: '/api_interface/set_relev_index/',
+      type: 'post',
+      data: {
+        'doc_index': doc_index,
+        'relevance': rele_value,
+      },
+      success: function (xhr) {
+        change_relev_button(0);
+      },
+      error: function(xhr) {
+        if (xhr.status == 403) {
+          Utils.notify('error', xhr.responseText);
+        }
+      }
+    });
+  });
+
+  //clicked relevant button
+    $("body").on('click', "#3", function () {
+      var rele_value = $(this).attr('value');
+      var doc_index = $(this).closest(".doc-container").attr('doc-idx')
+      $.ajax({
+        url: '/api_interface/set_relev_index/',
+        type: 'post',
+        data: {
+          'doc_index': doc_index,
+          'relevance': rele_value,
+        },
+        success: function (xhr) {
+          change_relev_button(1);
+        },
+        error: function (xhr) {
+          if (xhr.status == 403) {
+            Utils.notify('error', xhr.responseText);
+          }
+        }
+      });
+    });
+    
 });
-
-
-
 

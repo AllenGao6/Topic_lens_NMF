@@ -24,6 +24,10 @@ class topic_tree:
         "d3fe14",  "1da49c", "ccf6e9", "a54509", "7d5bf0", "d08f5d", "fec24c",  "0d906b", "7a9293", "7ed8fe",
         "d9a742",  "c7ecf9",  "72805e", "dccc69",  "86757e", "a0acd2",  "fecd0f",  "4a9bda", "bdb363",  "b1485d",
         "b98b91",  "86df9c",  "6e6089", "826cae", "4b8d5f", "8193e5",  "b39da2", "5bfce4", "df4280", "a2aca6", "ffffff"]
+        self.doc_relevance = {}
+        for i in range(self.X.shape[0]):
+            self.doc_relevance[self.doc_label[i]] = 0
+        
 
 
     @property
@@ -39,6 +43,12 @@ class topic_tree:
 
     def getColor(self):
         return self.color
+
+    def get_doc_relevance(self, index):
+        return self.doc_relevance[index]
+
+    def set_doc_relevance(self, index, rele_index):
+        self.doc_relevance[index] = rele_index
 
     def rand_color(self):
         '''
@@ -231,15 +241,19 @@ class topic_tree:
 
 
     # return a list of tuple (word, weight)
-    def get_top_topics(self, topic=None, n_words=20, Allword=None):
+    def get_top_topics(self, topic=None, n_words=20, Allword=None, return_indice=False):
         tuple_list = []
         word_topic = topic.topic_word
         indices = np.argpartition(word_topic, -1 * n_words)[-1 * n_words:]
         indices = np.flip(indices[np.argsort(word_topic[indices])])
-        words = Allword[indices]
-        for i in range(len(words)):
-            tuple_list.append((words[i], word_topic[indices[i]] ))
-        return tuple_list
+        if return_indice:
+            print("checkkk")
+            return list(indices)
+        else:
+            words = Allword[indices]
+            for i in range(len(words)):
+                tuple_list.append((words[i], word_topic[indices[i]] ))
+            return tuple_list
 
     def setName(self, new_name):
         self.name = new_name

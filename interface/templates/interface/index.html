@@ -194,8 +194,20 @@
 				Updating...
 			</div>
 		</div>
+
+		<div class="ui top attached segment">
+			<p>Key Words Filter</p>
+		</div>
+		<div class="ui attached blue segment">
+			<div class="ui relaxed grid" id="keyword_filters">
+				Updating...
+			</div>
+		</div>
+
 		<div class="ui top attached segment">
 			<p><span id="numDocFound">{{ num_docs }}</span>/<span id="numDocTotal">{{ num_docs }}</span> documents returned</p>
+			<p>Topic Selected: <span id="dot_select">{{ num_docs }}</span> </p>
+			<p>Key Words Selected: <span id="keyword_select">{{ num_docs }}</span> </p>
 		</div>
 		<div class="ui attached segment">
 		  	<div id="docList" class="ui list" style="height: 400px; overflow: scroll;">
@@ -217,6 +229,20 @@
 					</div>
 					<div class="extra content">
 						<div>Topics: <span class="_topic_names">{{ topic_names }}</span></div>
+					</div>
+					<div class="extra content">
+						<div>Keywords: <span class="_key_words">{{ topic_names }}</span></div>
+					</div>
+					<div class="extra content">
+						<div>Is this document consistant with current assigned topic:</div>
+						<br/>
+						<div class="ui buttons" id='rate_relevant'>
+							<button class="ui button" tabindex="3" id='1' value='-1'>Not Relevant</button>
+							<div class="or"></div>
+							<button class="ui button" tabindex="0" id='2' value='0'>N/A</button>
+							<div class="or"></div>
+							<button class="ui button" tabindex="0" id='3' value='1'>Relevant</button>
+						  </div>
 					</div>
 					<div class="extra content">
 					    <span class="left floated">
